@@ -94,8 +94,6 @@ const jsonLd = {
           <h4>逛一逛</h4>
           <ul>
             {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
-            <li><a href="/eggs.json">开放数据 JSON</a></li>
-            <li><a href="/rss.xml">RSS 订阅</a></li>
           </ul>
         </div>
         <div>
@@ -104,6 +102,14 @@ const jsonLd = {
             <li><a href="/submit">下个蛋（投稿新额度）</a></li>
             <li><a href={SITE.issueNew} rel="noopener">报个坏蛋（失效 / 纠错）</a></li>
             <li><a href="/about">核验规范</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>订阅与数据</h4>
+          <ul>
+            <li><a href="/rss.xml">RSS 订阅</a></li>
+            <li><a href="/eggs.json">开放数据 JSON</a></li>
+            <li><a href="/sitemap.xml">sitemap.xml</a></li>
           </ul>
         </div>
         <p class="footer-legal">

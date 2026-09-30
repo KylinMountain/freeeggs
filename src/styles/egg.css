@@ -239,8 +239,9 @@ select:focus { outline: 2px solid var(--accent-bright); outline-offset: 1px; }
 .digest-list li:first-child { border-top: 0; }
 
 /* ---------- 页脚 ---------- */
-.site-footer { background: var(--dark); color: var(--dark-muted); padding: clamp(48px, 6vw, 72px) 0 40px; }
-.footer-grid { display: grid; grid-template-columns: 1.6fr 1fr 1fr; gap: 32px; }
+.site-footer { background: var(--dark); color: var(--dark-muted); border-top: 1px solid var(--dark-hairline); padding: clamp(48px, 6vw, 72px) 0 40px; }
+/* 四栏：品牌栏刻意不给他太多 —— 内容只有两行，给宽了中间就是一片真空 */
+.footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1.15fr 1fr; gap: clamp(24px, 3vw, 48px); }
 .footer-brand { font-family: var(--font-serif); font-size: 1.4rem; color: var(--dark-ink); letter-spacing: .08em; margin-bottom: 10px; }
 .footer-grid h4 { font-size: .72rem; letter-spacing: .16em; text-transform: uppercase; color: var(--dark-muted); margin: 0 0 14px; font-family: var(--font-mono); font-weight: 500; }
 .footer-grid ul { list-style: none; margin: 0; padding: 0; font-size: .88rem; }
@@ -354,6 +355,11 @@ table.data th { font-family: var(--font-mono); font-size: .74rem; letter-spacing
   .row { grid-template-columns: 140px minmax(0, 1fr); }
   .row-meta { grid-column: 1 / -1; flex-direction: row; align-items: center; justify-content: flex-start; text-align: left; flex-wrap: wrap; gap: 14px; }
 }
+@media (max-width: 1200px) {
+  /* 四栏在 1200 以下会挤，退成两栏 */
+  .footer-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+}
+
 @media (max-width: 900px) {
   .detail-layout { grid-template-columns: 1fr; }
   .form-grid { grid-template-columns: minmax(0, 1fr); }
@@ -429,7 +435,8 @@ table.data th { font-family: var(--font-mono); font-size: .74rem; letter-spacing
   .digest-title { font-size: clamp(1.8rem, 2.4vw, 2.5rem); }
   .digest-list { max-width: 900px; }
 
-  .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
+  .footer-grid { grid-template-columns: 1.5fr 1fr 1.15fr 1fr; gap: clamp(32px, 4vw, 72px); }
+  .digest-list { max-width: 1150px; }
 }
 
 /* 超宽屏（2K/4K）再放一档，别在两侧留出两条大空白 */
@@ -440,4 +447,5 @@ table.data th { font-family: var(--font-mono); font-size: .74rem; letter-spacing
   .row-sub { max-width: 88ch; }
   .feature-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .lead { gap: clamp(48px, 5vw, 96px); }
+  .digest-list { max-width: 1320px; }
 }
