@@ -75,7 +75,7 @@ const jsonLd = {
             <a href={n.href} aria-current={active === n.key ? "page" : undefined}>{n.label}</a>
           ))}
         </nav>
-        <a class="nav-cta" href="/submit">报一颗蛋</a>
+        <a class="nav-cta" href="/submit">下个蛋</a>
       </div>
       <div class="scroll-progress" data-progress aria-hidden="true"></div>
     </header>
@@ -101,8 +101,8 @@ const jsonLd = {
         <div>
           <h4>一起补蛋</h4>
           <ul>
-            <li><a href="/submit">投稿一颗新蛋</a></li>
-            <li><a href={SITE.issueNew} rel="noopener">报告失效 / 纠错</a></li>
+            <li><a href="/submit">下个蛋（投稿新额度）</a></li>
+            <li><a href={SITE.issueNew} rel="noopener">报个坏蛋（失效 / 纠错）</a></li>
             <li><a href="/about">核验规范</a></li>
           </ul>
         </div>

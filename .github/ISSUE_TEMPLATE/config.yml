@@ -1,5 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: 投稿一颗新蛋（表单）
+  - name: 下个蛋（表单）
     url: https://freeeggs.xiruistar.cn/submit
     about: 不想写 Markdown？用表单，会自动整理好格式。

@@ -1,4 +1,4 @@
-name: 报告一颗蛋
+name: 下个蛋
 description: 投稿新发现的免费额度，或报告某条已失效 / 有错误
 title: "[蛋] "
 labels: ["submission"]
@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         感谢补蛋！填得越细，核验越快。
-        如果只是想快速投稿，也可以直接用站上的[投稿表单](https://freeeggs.pages.dev/submit)。
+        如果只是想快速投稿，也可以直接用站上的[下蛋表单](https://freeeggs.xiruistar.cn/submit)。
 
   - type: dropdown
     id: kind

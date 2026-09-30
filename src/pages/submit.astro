@@ -3,12 +3,13 @@ import BaseLayout from "../layouts/BaseLayout.astro";
 import { SITE, CATEGORIES, DIFFICULTY, REGIONS } from "../data/site";
 ---
 
-<BaseLayout title="报一颗蛋" description="投稿一颗新的免费额度：填好表单，会自动整理成结构化内容，一键提交。" active="submit">
+<BaseLayout title="下个蛋" description="投稿一颗新的免费额度：填好表单，会自动整理成结构化内容，一键提交。你负责下蛋，孵是我们的事。" active="submit">
   <section class="wrap page-head">
-    <h1 class="page-title" transition:name="page-title">报一颗蛋</h1>
+    <h1 class="page-title" transition:name="page-title">下个蛋</h1>
     <p class="page-lede">
-      发现了一个我们漏掉的免费额度，或者某条已经失效了？填一下这张表。右侧会实时整理成结构化内容，
-      你确认无误再提交 —— 不用自己斟酌格式。
+      发现了我们漏掉的一颗免费额度？填一下这张表。<strong>你负责下蛋，孵是我们的事</strong> ——
+      右侧会实时整理成结构化内容，你确认无误再提交，不用自己斟酌格式。
+      如果是要报告某条已经失效，请走<a href={SITE.issueNew} rel="noopener">报个坏蛋</a>。
     </p>
   </section>
 
@@ -16,8 +17,8 @@ import { SITE, CATEGORIES, DIFFICULTY, REGIONS } from "../data/site";
     <div class="notice" style="margin-bottom:clamp(28px,4vw,44px)">
       <span class="ico">🙏</span>
       <p>
-        投稿前请先自己走一遍流程。如果能附上<strong>实际到账截图</strong>（打码手机号、订单号等信息），
-        核验会快很多。看到活动但没领，也可以投 —— 我们会标成「待核验」，不会假装核实过。
+        下蛋前请先自己走一遍流程。如果能附上<strong>实际到账截图</strong>（打码手机号、订单号等信息），
+        核验会快很多。看到活动但没领，也可以下 —— 我们会标成「待核验」，不会假装核实过。
       </p>
     </div>
 
@@ -116,25 +117,25 @@ import { SITE, CATEGORIES, DIFFICULTY, REGIONS } from "../data/site";
     <section style="padding-top:clamp(40px,6vw,72px)">
       <div class="section-head">
         <div class="section-head-top">
-          <span class="sec-label">核验</span>
-          <h2 class="sec-title">投稿之后会发生什么</h2>
+          <span class="sec-label">孵化</span>
+          <h2 class="sec-title">下完蛋之后会发生什么</h2>
         </div>
       </div>
       <div class="step-grid">
         <div class="step">
-          <div class="step-num">01</div>
-          <h3>先自己去试一遍</h3>
-          <p>我们会按你写的步骤走一遍流程。能复现的，升成「社区整理」并写上当天日期。</p>
+          <div class="step-num">收蛋</div>
+          <h3>先按你写的走一遍</h3>
+          <p>拿到线索后我们会自己去试。能复现的，升成「社区整理」并写上当天日期。</p>
         </div>
         <div class="step">
-          <div class="step-num">02</div>
-          <h3>官方页面确认才升「官方公示」</h3>
-          <p>只有官方定价页或公告里白纸黑字写了的，才会标成官方来源。你的实测会如实标注。</p>
+          <div class="step-num">孵蛋</div>
+          <h3>官方页面写了才升「官方公示」</h3>
+          <p>只有官方定价页或公告里白纸黑字写了的，才标成官方来源。你的实测会如实标注，不含糊过去。</p>
         </div>
         <div class="step">
-          <div class="step-num">03</div>
-          <h3>写进当天的蛋报</h3>
-          <p>改动会出现在<a href="/daily">蛋报</a>里，并写明是新增、复核还是规则变动。</p>
+          <div class="step-num">出壳</div>
+          <h3>孵不出来就老实挂着</h3>
+          <p>核验不了的不硬写成「有效」，就挂「待核验」；能确认的写进当天<a href="/daily">蛋报</a>，注明是新增、复核还是规则变动。</p>
         </div>
       </div>
     </section>
@@ -168,7 +169,7 @@ import { SITE, CATEGORIES, DIFFICULTY, REGIONS } from "../data/site";
 
     function build() {
       var lines = [];
-      lines.push("### 投稿：一颗新蛋");
+      lines.push("### 下个蛋 · 新额度投稿");
       lines.push("");
       lines.push("**名称**：" + (field("title") || "(未填)"));
       lines.push("**官方链接**：" + (field("link") || "(未填)"));
