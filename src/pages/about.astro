@@ -11,7 +11,7 @@ const pending = EGGS.filter((e) => e.confidence === "pending").length;
 
 <BaseLayout title="关于" description="领鸡蛋是什么、数据从哪来、怎么核验、以及我们不做什么。" active="about">
   <section class="wrap page-head">
-    <h1 class="page-title">关于领鸡蛋</h1>
+    <h1 class="page-title" transition:name="page-title">关于领鸡蛋</h1>
     <p class="page-lede">{SITE.tagline}。上一代人的鸡蛋在超市门口排队领，这一代人的鸡蛋在对话框里。</p>
   </section>
 

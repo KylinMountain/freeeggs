@@ -22,7 +22,7 @@ const catKeys = Object.keys(CATEGORIES) as (keyof typeof CATEGORIES)[];
   active="eggs"
 >
   <section class="wrap page-head">
-    <h1 class="page-title">全部鸡蛋</h1>
+    <h1 class="page-title" transition:name="page-title">全部鸡蛋</h1>
     <p class="page-lede">
       共 {EGGS.length} 条，按条件筛一筛。其中 {liveCount} 条核验有效，{pendingCount} 条还只是待核验的线索。
       {EGGS_UPDATED_AT && <span>数据最后核验于 {fmtDate(EGGS_UPDATED_AT)}。</span>}
@@ -91,6 +91,7 @@ const catKeys = Object.keys(CATEGORIES) as (keyof typeof CATEGORIES)[];
 </BaseLayout>
 
 <script>
+  function initCatalog() {
   const catalog = document.querySelector("[data-catalog]");
   const cards = catalog ? Array.from(catalog.querySelectorAll("[data-egg]")) : [];
   const qEl = document.querySelector("[data-q]");
@@ -150,4 +151,8 @@ const catKeys = Object.keys(CATEGORIES) as (keyof typeof CATEGORIES)[];
   });
 
   apply();
+  }
+
+  initCatalog();
+  document.addEventListener("astro:page-load", initCatalog);
 </script>

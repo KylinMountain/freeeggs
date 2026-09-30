@@ -1,5 +1,7 @@
 ---
 import "../styles/egg.css";
+import "../styles/fx.css";
+import { ClientRouter } from "astro:transitions";
 import { SITE } from "../data/site";
 
 interface Props {
@@ -10,7 +12,7 @@ interface Props {
 
 const { title, description = SITE.description, active } = Astro.props;
 const fullTitle = title ? title + " · " + SITE.name : SITE.name + " · " + SITE.tagline;
-const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://freeeggs.pages.dev").href;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://freeeggs.xiruistar.cn").href;
 
 const NAV = [
   { href: "/eggs", label: "全部鸡蛋", key: "eggs" },
@@ -45,7 +47,16 @@ const jsonLd = {
     <meta name="twitter:card" content="summary_large_image" />
     <link rel="alternate" type="application/rss+xml" title={SITE.name + " 蛋报"} href="/rss.xml" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <script is:inline>document.documentElement.classList.add("js");</script>
+    <ClientRouter />
+    <script is:inline>
+      // 同步加类，保证首屏浮现动画不闪；再加一道兜底，万一模块脚本没跑起来就取消隐藏
+      document.documentElement.classList.add("js");
+      window.addEventListener("load", function () {
+        setTimeout(function () {
+          if (!window.__fxBound) document.documentElement.classList.remove("js");
+        }, 1500);
+      });
+    </script>
     <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
   </head>
   <body>
@@ -66,6 +77,7 @@ const jsonLd = {
         </nav>
         <a class="nav-cta" href="/submit">报一颗蛋</a>
       </div>
+      <div class="scroll-progress" data-progress aria-hidden="true"></div>
     </header>
 
     <main>
@@ -103,29 +115,90 @@ const jsonLd = {
       </div>
     </footer>
 
-    <script is:inline>
-      (function () {
+    <div class="grain" aria-hidden="true"></div>
+
+    <script>
+      var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      function onScroll() {
         var header = document.querySelector("[data-header]");
-        function onScroll() {
-          if (!header) return;
-          if (window.scrollY > 8) header.classList.add("is-scrolled");
-          else header.classList.remove("is-scrolled");
+        if (header) header.classList.toggle("is-scrolled", window.scrollY > 8);
+
+        var bar = document.querySelector("[data-progress]");
+        if (bar) {
+          var max = document.documentElement.scrollHeight - window.innerHeight;
+          bar.style.transform = "scaleX(" + (max > 0 ? Math.min(1, window.scrollY / max) : 0) + ")";
+        }
+
+        var aur = document.querySelector("[data-aurora]");
+        if (aur && !reduce.matches) {
+          aur.style.transform = "translate3d(0," + Math.min(window.scrollY, 900) * 0.16 + "px,0)";
+        }
+      }
+
+      function bindGlobal() {
+        if (!window.__fxBound) {
+          window.__fxBound = true;
+          window.addEventListener("scroll", onScroll, { passive: true });
+          window.addEventListener("resize", onScroll, { passive: true });
+          document.addEventListener("pointermove", function (e) {
+            if (reduce.matches || e.pointerType === "touch") return;
+            var m = document.querySelector(".masthead");
+            if (!m) return;
+            var r = m.getBoundingClientRect();
+            if (e.clientY < r.top - 80 || e.clientY > r.bottom + 80) return;
+            m.style.setProperty("--mx", (e.clientX - r.left) + "px");
+            m.style.setProperty("--my", (e.clientY - r.top) + "px");
+            m.classList.add("is-tracking");
+          }, { passive: true });
         }
         onScroll();
-        window.addEventListener("scroll", onScroll, { passive: true });
+      }
 
-        var nodes = document.querySelectorAll("[data-reveal]");
-        if (!("IntersectionObserver" in window)) {
-          for (var i = 0; i < nodes.length; i++) nodes[i].classList.add("is-in");
+      function reveal() {
+        var nodes = Array.prototype.slice.call(document.querySelectorAll("[data-reveal]:not(.is-in)"));
+        if (!nodes.length) return;
+        if (reduce.matches || !("IntersectionObserver" in window)) {
+          nodes.forEach(function (n) { n.classList.add("is-in"); });
           return;
         }
         var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (e) {
-            if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+          entries.forEach(function (en) {
+            if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
           });
-        }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 });
-        for (var j = 0; j < nodes.length; j++) io.observe(nodes[j]);
-      })();
+        }, { rootMargin: "0px 0px -5% 0px", threshold: 0.04 });
+        nodes.forEach(function (n) { io.observe(n); });
+      }
+
+      function countUp() {
+        Array.prototype.slice.call(document.querySelectorAll("[data-count-to]:not([data-counted])")).forEach(function (el) {
+          el.setAttribute("data-counted", "1");
+          var target = parseFloat(el.getAttribute("data-count-to"));
+          if (isNaN(target)) return;
+          if (reduce.matches) { el.textContent = String(target); return; }
+          var start = null;
+          var dur = 1000;
+          function step(ts) {
+            if (start === null) start = ts;
+            var p = Math.min(1, (ts - start) / dur);
+            el.textContent = String(Math.round(target * (1 - Math.pow(1 - p, 3))));
+            if (p < 1) requestAnimationFrame(step);
+            else el.textContent = String(target);
+          }
+          requestAnimationFrame(step);
+          // 兜底：标签页在后台时 rAF 会被节流，这里保证最终一定落到正确数值
+          setTimeout(function () { el.textContent = String(target); }, dur + 500);
+        });
+      }
+
+      function boot() {
+        bindGlobal();
+        reveal();
+        countUp();
+      }
+
+      boot();
+      document.addEventListener("astro:page-load", boot);
     </script>
   </body>
 </html>

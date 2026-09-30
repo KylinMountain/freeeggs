@@ -4,6 +4,7 @@ import EggFeature from "../components/EggFeature.astro";
 import { EGGS, EGGS_UPDATED_AT } from "../data/eggs";
 import { DIGESTS } from "../data/digests";
 import { SITE, CATEGORIES, DIFFICULTY, STATUS_META, TODAY } from "../data/site";
+import { PROVIDERS } from "../data/providers";
 import { dayDiff, fmtDate, relDay } from "../lib/format";
 
 const today = TODAY;
@@ -17,26 +18,32 @@ const pendingCount = EGGS.filter((e) => e.status === "unverified").length;
 
 const latest = DIGESTS[0];
 const leadStatus = lead ? STATUS_META[lead.status] : null;
+
+// 顶部跑马灯：最近上架的 8 颗，纯装饰，不参与交互
+const providerName = (id: string) => PROVIDERS.find((p) => p.id === id)?.name ?? id;
+const newest = [...EGGS].sort((a, b) => b.addedAt.localeCompare(a.addedAt)).slice(0, 8);
 ---
 
 <BaseLayout active="home">
   <section class="wrap masthead">
+    <div class="aurora" data-aurora aria-hidden="true"><i></i><i></i><i></i></div>
+    <div class="spotlight" aria-hidden="true"></div>
     <div class="masthead-kicker">Free Eggs · 每日更新</div>
-    <h1 class="masthead-title">领<em>鸡</em>蛋</h1>
+    <h1 class="masthead-title" transition:name="page-title">领<em>鸡</em>蛋</h1>
     <p class="masthead-tagline">{SITE.tagline}</p>
     <p class="masthead-lede">{SITE.intro}</p>
 
     <div class="stat-strip">
       <div class="stat">
-        <span class="stat-num">{EGGS.length}</span>
+        <span class="stat-num" data-count-to={EGGS.length}>{EGGS.length}</span>
         <span class="stat-label">颗蛋在架</span>
       </div>
       <div class="stat">
-        <span class="stat-num accent">{newCount}</span>
+        <span class="stat-num accent" data-count-to={newCount}>{newCount}</span>
         <span class="stat-label">近 3 天上新</span>
       </div>
       <div class="stat">
-        <span class="stat-num">{liveCount}</span>
+        <span class="stat-num" data-count-to={liveCount}>{liveCount}</span>
         <span class="stat-label">核验有效中</span>
       </div>
       <div class="stat">
@@ -46,8 +53,21 @@ const leadStatus = lead ? STATUS_META[lead.status] : null;
     </div>
   </section>
 
+  <div class="ticker" aria-hidden="true">
+    <div class="ticker-track">
+      {newest.concat(newest).map((e) => (
+        <span class="ticker-item">
+          <span class="ticker-dot"></span>
+          <span class="ticker-provider">{providerName(e.providerId)}</span>
+          <span>{e.title}</span>
+          <span class="ticker-value">{e.valueText}</span>
+        </span>
+      ))}
+    </div>
+  </div>
+
   <div class="wrap">
-    <div class="notice">
+    <div class="notice" data-reveal>
       <span class="ico">🥚</span>
       <p>
         <strong>先把丑话说在前面：</strong>本站条目由社区整理，每条都标注了<strong>最后核验日期</strong>与来源可信度。
@@ -59,7 +79,7 @@ const leadStatus = lead ? STATUS_META[lead.status] : null;
 
   {lead && (
     <section class="wrap section">
-      <div class="section-head">
+      <div class="section-head" data-reveal>
         <div class="section-head-top">
           <span class="sec-label">01 / 今日精选</span>
           <h2 class="sec-title">这几颗最值得先领</h2>
@@ -68,7 +88,7 @@ const leadStatus = lead ? STATUS_META[lead.status] : null;
         <p class="sec-desc">面值高、门槛低、最近核验过的。左边这颗是今天的头条。</p>
       </div>
 
-      <div class="lead">
+      <div class="lead" data-reveal style="--d:90ms">
         <div>
           <div class="lead-label">
             {leadStatus && <span class={"badge badge--" + leadStatus.tone}>{leadStatus.label}</span>}
@@ -100,7 +120,7 @@ const leadStatus = lead ? STATUS_META[lead.status] : null;
       </div>
 
       {rest.length > 0 && (
-        <div class="feature-grid" style="margin-top:1px">
+        <div class="feature-grid" style="margin-top:1px" data-reveal>
           {rest.map((egg) => <EggFeature egg={egg} today={today} />)}
         </div>
       )}
@@ -115,13 +135,13 @@ const leadStatus = lead ? STATUS_META[lead.status] : null;
   )}
 
   <section class="wrap section">
-    <div class="section-head">
+    <div class="section-head" data-reveal>
       <div class="section-head-top">
         <span class="sec-label">02 / 领蛋三步</span>
         <h2 class="sec-title">不管在哪家领，流程都差不多</h2>
       </div>
     </div>
-    <div class="step-grid">
+    <div class="step-grid" data-reveal>
       <div class="step">
         <div class="step-num">STEP 01</div>
         <h3>挑一颗蛋</h3>
