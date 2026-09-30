@@ -1,18 +1,20 @@
 # 上线配置（一次性）
 
-> ## 当前状态
+> ## 当前状态：已全部完成 ✅
+>
+> 线上地址 **https://freeeggs.xiruistar.cn**
 >
 > | | 项目 | 状态 |
 > | --- | --- | --- |
+> | ✅ | DNS A 记录 | `freeeggs.xiruistar.cn → 47.100.32.255`，阿里 / Google / 系统三处解析一致 |
 > | ✅ | 服务器目录 `/var/www/freeeggs` | 已创建 |
-> | ✅ | nginx 站点 `freeeggs.conf` | 已安装，`nginx -t` 通过 |
-> | ✅ | 部署专用密钥 | 已生成并写入服务器 `authorized_keys` |
-> | ✅ | GitHub Secrets（5 个） | 已配置 |
-> | ✅ | 首次部署 | 成功；服务器上以 Host 头访问首页 / `/eggs/` / `/eggs.json` 均 200 |
-> | ⬜ | **DNS A 记录** | **待你在 DNS 服务商添加** |
-> | ⬜ | **HTTPS 证书** | 待 DNS 生效后执行 certbot |
+> | ✅ | nginx 站点 + 安全头 snippet | 已安装，`nginx -t` 通过 |
+> | ✅ | HTTPS 证书 | Let's Encrypt，到期 2026-12-29，自动续期已配置 |
+> | ✅ | HTTP → HTTPS | 301 跳转，HTTP/2 可用 |
+> | ✅ | 部署专用密钥 + 5 个 GitHub Secrets | 已配置 |
+> | ✅ | 自动部署 | 推送 main 后约 25 秒上线 |
 >
-> **只剩两步：加 DNS 记录 → 签证书。**见下面第 1 节和第 2 节末尾。
+> 以后只需推送 main，不用再碰服务器。
 
 目标：**合并 PR → 自动构建 → rsync 到阿里云 → 线上更新**。
 
@@ -57,6 +59,9 @@ ssh aliyun
 sudo mkdir -p /var/www/freeeggs
 sudo chown -R root:root /var/www/freeeggs
 
+# 安全头 snippet（必须先放，站点配置会 include 它）
+sudo tee /etc/nginx/snippets/freeeggs-headers.conf > /dev/null < deploy/nginx-freeeggs-headers.conf
+
 # nginx 站点
 sudo tee /etc/nginx/sites-available/freeeggs.conf > /dev/null < deploy/nginx-freeeggs.conf
 sudo ln -sf /etc/nginx/sites-available/freeeggs.conf /etc/nginx/sites-enabled/freeeggs.conf
@@ -72,6 +77,16 @@ sudo certbot --nginx -d freeeggs.xiruistar.cn
 scp deploy/nginx-freeeggs.conf aliyun:/tmp/freeeggs.conf
 ssh aliyun 'sudo mv /tmp/freeeggs.conf /etc/nginx/sites-available/freeeggs.conf && sudo ln -sf /etc/nginx/sites-available/freeeggs.conf /etc/nginx/sites-enabled/freeeggs.conf && sudo nginx -t && sudo systemctl reload nginx'
 ```
+
+### 一个容易踩的 nginx 坑
+
+`add_header` **不会**从 `server` 级继承到「自己写了 `add_header`」的 `location`。
+本站的 `/_astro/`、`*.html`、开放数据这几个 location 各自要设 `Cache-Control`，
+如果不显式 include 那份 snippet，安全头就会**静默丢失**——浏览器一切正常，只有查响应头才看得出来。
+
+另一个坑：`expires 1y` 本身就会下发一条 `Cache-Control: max-age=...`，
+再写 `add_header Cache-Control "public, immutable"` 会变成**两条重复的 Cache-Control**。
+所以 `/_astro/` 只用了 `add_header`，没有用 `expires`。
 
 ## 3. 生成专用的部署密钥
 
