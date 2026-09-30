@@ -35,8 +35,8 @@
   --font-serif: "Noto Serif SC", "Source Han Serif SC", "Songti SC", "SimSun", Georgia, "Times New Roman", serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
 
-  --maxw: 1240px;
-  --gutter: clamp(20px, 4vw, 40px);
+  --maxw: 1720px;
+  --gutter: clamp(20px, 3.2vw, 64px);
   --sec-y: clamp(64px, 9vw, 132px);
 }
 
@@ -375,4 +375,69 @@ table.data th { font-family: var(--font-mono); font-size: .74rem; letter-spacing
   .feature-grid { grid-template-columns: 1fr; }
   .masthead { padding-top: 40px; }
   .field-row { grid-template-columns: 1fr; }
+}
+
+/* ---------- 宽屏 ---------- */
+/* 1240px 时代在 2K/4K 屏上只剩中间一条。这里把栏宽撑开，
+   并且字号同步放大 —— 光拉宽不改字，只会让内容显得稀。 */
+
+@media (min-width: 1440px) {
+  .row { grid-template-columns: 190px minmax(0, 1fr) 260px; gap: clamp(20px, 2.6vw, 48px); }
+  .row-sub { max-width: 82ch; }          /* 摘要限制行长，别拉成一条长线 */
+  .lead { gap: clamp(36px, 4vw, 72px); }
+  .masthead-lede { max-width: 680px; }
+  .digest-list { max-width: 860px; }
+}
+
+@media (min-width: 1700px) {
+  body { font-size: 17px; }
+
+  .masthead { padding: clamp(72px, 7vw, 128px) 0 clamp(44px, 4vw, 76px); }
+  .masthead-title { font-size: clamp(7rem, 10.5vw, 12rem); }
+  .masthead-lede { max-width: 700px; font-size: 1.08rem; }
+
+  .stat { padding: 28px 24px; }
+  .stat-num { font-size: 2.5rem; }
+  .stat-label { font-size: .84rem; }
+
+  .sec-title { font-size: 2.3rem; }
+  .lead { grid-template-columns: minmax(0, 1.04fr) minmax(0, .96fr); }
+  .lead-value { font-size: 3rem; }
+  .lead-title { font-size: 2.35rem; }
+  .lead-summary { font-size: 1.08rem; }
+
+  .feature { padding: 32px 28px 36px; }
+  .feature-value { font-size: 1.2rem; }
+  .feature-title { font-size: 1.2rem; }
+  .feature-sum { font-size: .92rem; }
+
+  .row { grid-template-columns: 215px minmax(0, 1fr) 285px; }
+  .row-value { font-size: 1.1rem; }
+  .row-title { font-size: 1.28rem; }
+  .row-sub { font-size: .94rem; }
+
+  .notice { padding: 22px 28px; }
+  .notice p { max-width: 96ch; }        /* 提示条整行铺满会太长 */
+
+  .step { padding: 40px 34px 44px; }
+  .step h3 { font-size: 1.3rem; }
+  .step p { font-size: .96rem; }
+
+  .page-title { font-size: clamp(2.4rem, 4vw, 4rem); }
+  .page-lede { max-width: 740px; font-size: 1.1rem; }
+  .prose { max-width: 800px; }
+  .digest-title { font-size: clamp(1.8rem, 2.4vw, 2.5rem); }
+  .digest-list { max-width: 900px; }
+
+  .footer-grid { grid-template-columns: 2fr 1fr 1fr; }
+}
+
+/* 超宽屏（2K/4K）再放一档，别在两侧留出两条大空白 */
+@media (min-width: 2200px) {
+  :root { --maxw: 1960px; }
+  .masthead-title { font-size: clamp(9rem, 9.5vw, 13rem); }
+  .row { grid-template-columns: 230px minmax(0, 1fr) 300px; }
+  .row-sub { max-width: 88ch; }
+  .feature-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .lead { gap: clamp(48px, 5vw, 96px); }
 }
