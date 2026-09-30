@@ -1,0 +1,64 @@
+name: 每日复核清单
+
+on:
+  schedule:
+    # UTC 01:00 = 北京时间 09:00
+    - cron: "0 1 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  reverify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      # 仓库里的 .npmrc 把 pnpm store 指到了项目内（本地受限环境的权宜之计），
+      # CI 里没必要，显式指回默认位置以复用缓存语义。
+      - name: Install
+        run: pnpm install --frozen-lockfile --store-dir "$HOME/.pnpm-store"
+
+      - name: 数据体检
+        run: pnpm run check
+
+      - name: 生成复核清单
+        env:
+          MAX_AGE_DAYS: "21"
+        run: node scripts/stale.mjs --markdown > reverify-report.md
+
+      - name: 更新复核 issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TITLE="🔍 复核清单（自动更新）"
+          gh label create reverify --color FBCA04 --description "需要人工复核" 2>/dev/null || true
+
+          EXISTING=$(gh issue list --state open --search "$TITLE in:title" --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body-file reverify-report.md
+            echo "已更新 issue #$EXISTING"
+          else
+            gh issue create --title "$TITLE" --body-file reverify-report.md --label reverify
+            echo "已新建 issue"
+          fi
+
+      - name: 摘要
+        run: |
+          {
+            echo "## 复核清单已刷新"
+            echo ""
+            head -c 2000 reverify-report.md
+          } >> "$GITHUB_STEP_SUMMARY"

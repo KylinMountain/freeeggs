@@ -1,0 +1,248 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE, CATEGORIES, DIFFICULTY, REGIONS } from "../data/site";
+---
+
+<BaseLayout title="报一颗蛋" description="投稿一颗新的免费额度：填好表单，会自动整理成结构化内容，一键提交。" active="submit">
+  <section class="wrap page-head">
+    <h1 class="page-title">报一颗蛋</h1>
+    <p class="page-lede">
+      发现了一个我们漏掉的免费额度，或者某条已经失效了？填一下这张表。右侧会实时整理成结构化内容，
+      你确认无误再提交 —— 不用自己斟酌格式。
+    </p>
+  </section>
+
+  <div class="wrap">
+    <div class="notice" style="margin-bottom:clamp(28px,4vw,44px)">
+      <span class="ico">🙏</span>
+      <p>
+        投稿前请先自己走一遍流程。如果能附上<strong>实际到账截图</strong>（打码手机号、订单号等信息），
+        核验会快很多。看到活动但没领，也可以投 —— 我们会标成「待核验」，不会假装核实过。
+      </p>
+    </div>
+
+    <div class="form-grid">
+      <form data-submit-form data-issue-new={SITE.issueNew} data-email={SITE.email}>
+        <div class="field">
+          <label for="f-title">活动 / 额度名称 <span class="hint">必填</span></label>
+          <input id="f-title" name="title" type="text" placeholder="例：DeepSeek 桌面端下载礼" />
+        </div>
+
+        <div class="field">
+          <label for="f-link">官方链接 <span class="hint">必填，要能直接点开的官方地址</span></label>
+          <input id="f-link" name="link" type="url" placeholder="https://..." />
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-provider">平台</label>
+            <input id="f-provider" name="provider" type="text" placeholder="例：阿里云百炼" />
+          </div>
+          <div class="field">
+            <label for="f-value">面值</label>
+            <input id="f-value" name="value" type="text" placeholder="例：每个模型 100 万 tokens" />
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-category">类型</label>
+          <select id="f-category" name="category">
+            {Object.entries(CATEGORIES).map(([k, v]) => <option value={k}>{v.label} —— {v.desc}</option>)}
+          </select>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="f-difficulty">领取门槛</label>
+            <select id="f-difficulty" name="difficulty">
+              {Object.entries(DIFFICULTY).map(([k, v]) => <option value={k}>{v.label} —— {v.hint}</option>)}
+            </select>
+          </div>
+          <div class="field">
+            <label for="f-region">地区限制</label>
+            <select id="f-region" name="region">
+              {Object.entries(REGIONS).map(([k, v]) => <option value={k}>{v.label} —— {v.hint}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-duration">有效期 / 截止日期 <span class="hint">没有明确日期就写「长期」</span></label>
+          <input id="f-duration" name="duration" type="text" placeholder="例：领取后 180 天内有效 / 2026-12-31 截止" />
+        </div>
+
+        <div class="field">
+          <label for="f-steps">领取步骤 <span class="hint">一行一步，从打开哪个页面开始写</span></label>
+          <textarea id="f-steps" name="steps" placeholder="注册并完成实名&#10;开通百炼服务&#10;在模型广场逐个领取免费额度&#10;创建 API Key"></textarea>
+        </div>
+
+        <div class="field">
+          <label for="f-notes">坑与注意事项 <span class="hint">这条最值钱，多写点</span></label>
+          <textarea id="f-notes" name="notes" placeholder="要不要绑卡？是不是只有新用户？额度有没有有效期？哪里容易踩坑？"></textarea>
+        </div>
+
+        <div class="field">
+          <label>你实际领到了吗</label>
+          <div class="check-row">
+            <label><input type="radio" name="result" value="已实际领取到账" checked /> 已实际领取到账</label>
+            <label><input type="radio" name="result" value="看到活动但没领" /> 看到活动但没领</label>
+            <label><input type="radio" name="result" value="不确定" /> 不确定</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="f-contact">联系方式 <span class="hint">可选，方便核实时追问</span></label>
+          <input id="f-contact" name="contact" type="text" placeholder="GitHub 用户名 / 邮箱，都可以留空" />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn--primary" data-action-github>用 GitHub 提交</button>
+          <button type="button" class="btn btn--ghost" data-action-copy>复制内容</button>
+          {SITE.email && <button type="button" class="btn btn--ghost" data-action-mail>邮件投稿</button>}
+        </div>
+        <p class="toast" data-toast></p>
+      </form>
+
+      <aside>
+        <div class="eyebrow" style="margin-bottom:10px">自动整理成</div>
+        <div class="preview-box" data-preview></div>
+        <p class="muted" style="font-size:.8rem;margin-top:16px;line-height:1.8">
+          点「用 GitHub 提交」会打开一个<strong>已经填好内容</strong>的 issue 页面，你确认一下再提交。
+          不想用 GitHub 就点「复制内容」，粘到邮件或聊天里发过来也一样。
+        </p>
+      </aside>
+    </div>
+
+    <section style="padding-top:clamp(40px,6vw,72px)">
+      <div class="section-head">
+        <div class="section-head-top">
+          <span class="sec-label">核验</span>
+          <h2 class="sec-title">投稿之后会发生什么</h2>
+        </div>
+      </div>
+      <div class="step-grid">
+        <div class="step">
+          <div class="step-num">01</div>
+          <h3>先自己去试一遍</h3>
+          <p>我们会按你写的步骤走一遍流程。能复现的，升成「社区整理」并写上当天日期。</p>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <h3>官方页面确认才升「官方公示」</h3>
+          <p>只有官方定价页或公告里白纸黑字写了的，才会标成官方来源。你的实测会如实标注。</p>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <h3>写进当天的蛋报</h3>
+          <p>改动会出现在<a href="/daily">蛋报</a>里，并写明是新增、复核还是规则变动。</p>
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  (function () {
+    var form = document.querySelector("[data-submit-form]");
+    if (!form) return;
+    var preview = document.querySelector("[data-preview]");
+    var toast = document.querySelector("[data-toast]");
+    var issueBase = form.getAttribute("data-issue-new") || "";
+    var mailTo = form.getAttribute("data-email") || "";
+
+    function field(name) {
+      var el = form.querySelector('[name="' + name + '"]');
+      if (!el || !el.value) return "";
+      return String(el.value).trim();
+    }
+    function labelOf(name) {
+      var el = form.querySelector('[name="' + name + '"]');
+      if (!el || !el.options) return "";
+      var opt = el.options[el.selectedIndex];
+      return opt ? String(opt.textContent).trim() : "";
+    }
+    function radio(name) {
+      var el = form.querySelector('[name="' + name + '"]:checked');
+      return el ? String(el.value) : "";
+    }
+
+    function build() {
+      var lines = [];
+      lines.push("### 投稿：一颗新蛋");
+      lines.push("");
+      lines.push("**名称**：" + (field("title") || "(未填)"));
+      lines.push("**官方链接**：" + (field("link") || "(未填)"));
+      if (field("provider")) lines.push("**平台**：" + field("provider"));
+      if (field("value")) lines.push("**面值**：" + field("value"));
+      lines.push("**类型**：" + labelOf("category"));
+      lines.push("**门槛**：" + labelOf("difficulty"));
+      lines.push("**地区**：" + labelOf("region"));
+      if (field("duration")) lines.push("**有效期**：" + field("duration"));
+      lines.push("");
+      lines.push("**领取步骤**");
+      lines.push(field("steps") || "(未填)");
+      lines.push("");
+      lines.push("**坑与注意事项**");
+      lines.push(field("notes") || "(未填)");
+      lines.push("");
+      lines.push("**是否已实际领取**：" + (radio("result") || "未说明"));
+      if (field("contact")) lines.push("**联系方式**：" + field("contact"));
+      lines.push("");
+      lines.push("---");
+      lines.push("_由领鸡蛋投稿页自动生成_");
+      return lines.join("\n");
+    }
+
+    function refresh() {
+      if (preview) preview.textContent = build();
+    }
+
+    function flash(msg) {
+      if (!toast) return;
+      toast.textContent = msg;
+      setTimeout(function () { toast.textContent = ""; }, 4000);
+    }
+
+    function fallbackCopy(text, done) {
+      var ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "readonly");
+      ta.style.position = "fixed";
+      ta.style.top = "-1000px";
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand("copy"); done(); } catch (e) { flash("复制失败，请手动选中右侧内容。"); }
+      document.body.removeChild(ta);
+    }
+
+    form.addEventListener("submit", function (e) { e.preventDefault(); });
+    form.addEventListener("input", refresh);
+    form.addEventListener("change", refresh);
+
+    var gh = document.querySelector("[data-action-github]");
+    if (gh) gh.addEventListener("click", function () {
+      var t = field("title") || "新蛋投稿";
+      var url = issueBase + "?title=" + encodeURIComponent("[投稿] " + t) + "&body=" + encodeURIComponent(build());
+      window.open(url, "_blank", "noopener");
+    });
+
+    var copyBtn = document.querySelector("[data-action-copy]");
+    if (copyBtn) copyBtn.addEventListener("click", function () {
+      var md = build();
+      var done = function () { flash("已复制到剪贴板。"); };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(md).then(done, function () { fallbackCopy(md, done); });
+      } else {
+        fallbackCopy(md, done);
+      }
+    });
+
+    var mailBtn = document.querySelector("[data-action-mail]");
+    if (mailBtn) mailBtn.addEventListener("click", function () {
+      var subject = "[投稿] " + (field("title") || "新蛋");
+      window.location.href = "mailto:" + mailTo + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(build());
+    });
+
+    refresh();
+  })();
+</script>

@@ -1,0 +1,89 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { SITE, CONFIDENCE, STATUS_META, DIFFICULTY, TODAY } from "../data/site";
+import { EGGS, EGGS_UPDATED_AT } from "../data/eggs";
+import { fmtDate } from "../lib/format";
+
+const official = EGGS.filter((e) => e.confidence === "official").length;
+const community = EGGS.filter((e) => e.confidence === "community").length;
+const pending = EGGS.filter((e) => e.confidence === "pending").length;
+---
+
+<BaseLayout title="关于" description="领鸡蛋是什么、数据从哪来、怎么核验、以及我们不做什么。" active="about">
+  <section class="wrap page-head">
+    <h1 class="page-title">关于领鸡蛋</h1>
+    <p class="page-lede">{SITE.tagline}。上一代人的鸡蛋在超市门口排队领，这一代人的鸡蛋在对话框里。</p>
+  </section>
+
+  <div class="wrap">
+    <div class="prose">
+      <h2>这是什么</h2>
+      <p>
+        「领鸡蛋」是一个免费 AI 额度情报站。各家大模型平台为了拉新，常年会送新手 Token、免费层额度、学生礼包、云试用金。
+        这些福利散落在几十个控制台里，规则天天变，过期了也不通知你。我们把它收在一处，并且给每一条都标上
+        <strong>门槛、截止时间、最后核验日期和来源可信度</strong>。
+      </p>
+      <p>
+        名字来自那句「一代人有一代人的鸡蛋要领」。上一代人领的是超市门口的鸡蛋，这一代人领的是 Token。
+        东西变了，那种「不领白不领」的心情一模一样。
+      </p>
+
+      <h2>数据从哪来</h2>
+      <p>每条目录都带一个 <code>confidence</code> 字段，只有三种取值：</p>
+      <table>
+        <thead><tr><th>可信度</th><th>含义</th><th>当前条数</th></tr></thead>
+        <tbody>
+          <tr><td><strong>{CONFIDENCE.official.label}</strong></td><td>{CONFIDENCE.official.hint}</td><td class="mono">{official}</td></tr>
+          <tr><td><strong>{CONFIDENCE.community.label}</strong></td><td>{CONFIDENCE.community.hint}</td><td class="mono">{community}</td></tr>
+          <tr><td><strong>{CONFIDENCE.pending.label}</strong></td><td>{CONFIDENCE.pending.hint}</td><td class="mono">{pending}</td></tr>
+        </tbody>
+      </table>
+      <p>
+        我们不会把「听说有」写成「已核实」。所以你在站上会看到一部分条目顶着
+        <span class="badge badge--pending">待核验</span> 的标签 —— 那不是偷懒，那是诚实。
+      </p>
+
+      <h2>核验规范</h2>
+      <ul>
+        <li><strong>核验日期</strong>：只有人工打开过官方页面、确认规则仍然成立，才写 <code>verifiedAt</code>。没有就是 <code>null</code>，页面显示「尚未核验」。</li>
+        <li><strong>状态</strong>：「{STATUS_META.fresh.label}」表示最近核验可领；「{STATUS_META.ending.label}」表示有明确且临近的截止日期；「{STATUS_META.expired.label}」的条目会保留，避免你白跑。</li>
+        <li><strong>门槛</strong>：按 {DIFFICULTY[1].label} / {DIFFICULTY[2].label} / {DIFFICULTY[3].label} 三档评估，参考是否需要实名、绑卡、外币卡或人工审核。</li>
+        <li><strong>面值</strong>：能折算成人民币的写具体金额；纯 Token 额度不硬折算成钱，宁可留空。</li>
+      </ul>
+
+      <h2>我们不做的事</h2>
+      <ul>
+        <li>不收录需要「买课」「拉人头才能解锁」的伪福利。</li>
+        <li>不教你怎么用多账号、虚拟号、接码平台刷额度 —— 那叫薅羊毛，把平台薅急了大家都别领。</li>
+        <li>不替任何厂商背书。链接都是官方地址，我们不插推广、不拿返佣。</li>
+        <li>不保证有效。额度规则随时会变，请以官方页面为准。</li>
+      </ul>
+
+      <h2>怎么贡献</h2>
+      <p>
+        整个目录就是一个 TypeScript 数组，改起来没有门槛。你也可以直接走<a href="/submit">投稿表单</a>，
+        它会把内容整理成一段结构化 Markdown。带上：
+      </p>
+      <ul>
+        <li>活动名称与官方链接</li>
+        <li>你实际拿到的额度（截图打码敏感信息最好）</li>
+        <li>领取门槛：要不要实名、要不要绑卡、有没有地区限制</li>
+        <li>有效期，或者有没有明确的截止日期</li>
+      </ul>
+      <p>核验通过后，改动会写进当天的<a href="/daily">蛋报</a>，并更新这一条的核验日期。</p>
+
+      <h2>开放数据</h2>
+      <p>
+        整站数据以 JSON 形式开放：<a href="/eggs.json"><code>/eggs.json</code></a>，也可以订阅
+        <a href="/rss.xml">RSS</a>。想拿来做个自己的看板、写进周报，都随意，注明来源就行。
+      </p>
+
+      <h2>免责声明</h2>
+      <blockquote>
+        本站是社区整理的信息汇总，与任何模型厂商均无隶属或合作关系，也不从领取行为中获取任何收益。
+        所有额度、价格、活动规则与可用性都可能随时变动，本站不保证其准确性、完整性或时效性。
+        请以官方页面为准，并遵守各平台的服务条款。
+      </blockquote>
+    </div>
+  </div>
+</BaseLayout>

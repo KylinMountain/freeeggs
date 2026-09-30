@@ -1,0 +1,53 @@
+---
+import type { Egg } from "../data/types";
+import { CATEGORIES, STATUS_META, DIFFICULTY, REGIONS } from "../data/site";
+import { providerById } from "../data/providers";
+import { relDay, fmtDate } from "../lib/format";
+
+interface Props { egg: Egg; today: Date }
+const { egg, today } = Astro.props;
+
+const provider = providerById(egg.providerId);
+const status = STATUS_META[egg.status];
+const cat = CATEGORIES[egg.category];
+
+const haystack = [
+  egg.title, provider ? provider.name : "", egg.summary, egg.valueText,
+  cat.label, REGIONS[egg.region].label, ...egg.tags, ...egg.requires,
+].filter(Boolean).join(" ").toLowerCase();
+---
+<article
+  class="row"
+  data-egg
+  data-id={egg.id}
+  data-cat={egg.category}
+  data-region={egg.region}
+  data-diff={egg.difficulty}
+  data-status={egg.status}
+  data-added={egg.addedAt}
+  data-value={egg.valueCNY ?? -1}
+  data-expires={egg.expiresAt ?? "9999-12-31"}
+  data-search={haystack}
+>
+  <div>
+    <div class="row-value">{egg.valueText}</div>
+    <div class="row-kind">{cat.label}</div>
+  </div>
+
+  <div>
+    <h3 class="row-title"><a href={"/eggs/" + egg.id}>{egg.title}</a></h3>
+    <p class="row-sub">{egg.summary}</p>
+    <div class="row-tags">
+      <span class="tag">{provider ? provider.name : egg.providerId}</span>
+      <span class="tag">门槛 {DIFFICULTY[egg.difficulty].label}</span>
+      <span class="tag">{REGIONS[egg.region].label}</span>
+      {egg.tags.slice(0, 2).map((t) => <span class="tag">{t}</span>)}
+    </div>
+  </div>
+
+  <div class="row-meta">
+    <span class={"badge badge--" + status.tone}>{status.label}</span>
+    <span class="row-meta-line">核验 {egg.verifiedAt ? relDay(egg.verifiedAt, today) : "未核验"}</span>
+    <span class="row-meta-line">{egg.expiresAt ? "截止 " + fmtDate(egg.expiresAt, true) : egg.duration}</span>
+  </div>
+</article>

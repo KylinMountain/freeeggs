@@ -1,0 +1,180 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EggRow from "../../components/EggRow.astro";
+import { EGGS } from "../../data/eggs";
+import { providerById } from "../../data/providers";
+import { SITE, CATEGORIES, STATUS_META, DIFFICULTY, REGIONS, CONFIDENCE, TODAY } from "../../data/site";
+import { fmtDate, relDay, prettyCNY } from "../../lib/format";
+import type { Egg } from "../../data/types";
+
+export function getStaticPaths() {
+  return EGGS.map((egg) => ({ params: { id: egg.id }, props: { egg } }));
+}
+
+interface Props { egg: Egg }
+const { egg } = Astro.props;
+
+const provider = providerById(egg.providerId);
+const status = STATUS_META[egg.status];
+const cat = CATEGORIES[egg.category];
+const today = TODAY;
+
+const related = EGGS
+  .filter((e) => e.id !== egg.id && (e.providerId === egg.providerId || e.category === egg.category))
+  .sort((a, b) => {
+    const sa = a.providerId === egg.providerId ? 0 : 1;
+    const sb = b.providerId === egg.providerId ? 0 : 1;
+    return sa - sb || b.addedAt.localeCompare(a.addedAt);
+  })
+  .slice(0, 3);
+
+const reportUrl = SITE.issueNew + "?title=" + encodeURIComponent("[" + cat.label + "] " + egg.title);
+const isUnverified = egg.status === "unverified" || egg.confidence === "pending";
+---
+
+<BaseLayout title={egg.title} description={egg.summary} active="eggs">
+  <div class="wrap detail-head">
+    <p class="breadcrumb">
+      <a href="/">领鸡蛋</a> / <a href="/providers/{egg.providerId}">{provider ? provider.name : egg.providerId}</a> / <span>{cat.label}</span>
+    </p>
+
+    <div class="lead-label">
+      <span class={"badge badge--" + status.tone}>{status.label}</span>
+      <span class="badge badge--ghost">{CONFIDENCE[egg.confidence].label}</span>
+      {egg.featured && <span class="eyebrow">今日精选</span>}
+    </div>
+
+    <h1>{egg.title}</h1>
+    <p class="detail-lede">{egg.summary}</p>
+
+    <div style="display:flex;gap:16px;align-items:baseline;flex-wrap:wrap">
+      <span class="detail-value">{egg.valueText}</span>
+      <span class="muted mono" style="font-size:.8rem">
+        门槛 {DIFFICULTY[egg.difficulty].label} · {REGIONS[egg.region].label}
+        {egg.valueCNY ? " · 折算 " + prettyCNY(egg.valueCNY) : ""}
+      </span>
+    </div>
+  </div>
+
+  <div class="wrap">
+    {isUnverified && (
+      <div class="notice" style="margin-top:32px">
+        <span class="ico">🔍</span>
+        <p>
+          <strong>这条还没核验过。</strong>我们只找到了线索，没能确认当前是否仍然可领。
+          如果你刚试过，欢迎<a href={reportUrl} rel="noopener">告诉我们实际结果</a>，核实后会更新状态与日期。
+        </p>
+      </div>
+    )}
+    {egg.status === "ending" && (
+      <div class="notice" style="margin-top:32px">
+        <span class="ico">⏳</span>
+        <p><strong>临近截止。</strong>这条有明确的活动期限，建议今天就动手。</p>
+      </div>
+    )}
+    {egg.status === "expired" && (
+      <div class="notice" style="margin-top:32px">
+        <span class="ico">🕳️</span>
+        <p><strong>这条已经失效了。</strong>保留在站内是为了让你别再白跑一趟。</p>
+      </div>
+    )}
+
+    <div class="detail-layout">
+      <div>
+        <section class="panel">
+          <h2><span class="ico">🧭</span>怎么领</h2>
+          {egg.steps.length > 0 ? (
+            <ol class="steps">
+              {egg.steps.map((s) => <li>{s}</li>)}
+            </ol>
+          ) : (
+            <p class="muted" style="margin:0">这条还没有整理出步骤，先看官方页面。</p>
+          )}
+        </section>
+
+        {egg.notes.length > 0 && (
+          <section class="panel">
+            <h2><span class="ico">⚠️</span>坑与注意事项</h2>
+            <ul class="notes">
+              {egg.notes.map((n) => <li>{n}</li>)}
+            </ul>
+          </section>
+        )}
+
+        <section class="panel">
+          <h2><span class="ico">📌</span>领取前先看这几条</h2>
+          <ul class="notes">
+            <li>额度一般都有有效期，<strong>领了不用等于没领</strong>，先想好要拿它跑什么。</li>
+            <li>国内平台基本都要实名认证，一个身份证在一家通常只能领一次。</li>
+            <li>海外平台绑卡大多不会自动扣费，但用完免费额度后可能转为按量计费，记得设预算提醒。</li>
+            <li>不要用多账号、虚拟号等方式刷额度，风控封号得不偿失。</li>
+          </ul>
+        </section>
+      </div>
+
+      <aside>
+        <section class="panel">
+          <h2><span class="ico">🧾</span>档案</h2>
+          <dl class="facts">
+            <div class="fact"><dt>提供方</dt><dd><a href={"/providers/" + egg.providerId}>{provider ? provider.name : egg.providerId}</a></dd></div>
+            <div class="fact"><dt>类型</dt><dd>{cat.label}</dd></div>
+            <div class="fact"><dt>折算面值</dt><dd>{prettyCNY(egg.valueCNY)}</dd></div>
+            <div class="fact"><dt>门槛</dt><dd>{DIFFICULTY[egg.difficulty].label} · {DIFFICULTY[egg.difficulty].hint}</dd></div>
+            <div class="fact"><dt>地区</dt><dd>{REGIONS[egg.region].label}</dd></div>
+            <div class="fact"><dt>有效期</dt><dd>{egg.expiresAt ? "截止 " + fmtDate(egg.expiresAt) : egg.duration}</dd></div>
+            <div class="fact"><dt>需要</dt><dd>{egg.requires.length > 0 ? egg.requires.join(" · ") : "无特殊要求"}</dd></div>
+            <div class="fact"><dt>来源</dt><dd>{CONFIDENCE[egg.confidence].label}</dd></div>
+            <div class="fact"><dt>最后核验</dt><dd>{egg.verifiedAt ? fmtDate(egg.verifiedAt) + "（" + relDay(egg.verifiedAt, today) + "）" : "尚未核验"}</dd></div>
+            <div class="fact"><dt>上架</dt><dd>{fmtDate(egg.addedAt)}</dd></div>
+          </dl>
+        </section>
+
+        <section class="panel">
+          <a class="btn btn--primary btn--block" href={egg.link} target="_blank" rel="noopener noreferrer">
+            去官方页面领取 ↗
+          </a>
+          <a class="btn btn--ghost btn--block" style="margin-top:10px" href={reportUrl} target="_blank" rel="noopener noreferrer">
+            报失效 / 纠错
+          </a>
+          <p class="muted" style="font-size:.76rem;margin:12px 0 0;text-align:center">
+            外部链接，以官方页面规则为准
+          </p>
+        </section>
+
+        {egg.tags.length > 0 && (
+          <section class="panel">
+            <h2><span class="ico">🏷️</span>标签</h2>
+            <div class="row-tags">
+              {egg.tags.map((t) => <span class="tag">{t}</span>)}
+            </div>
+          </section>
+        )}
+      </aside>
+    </div>
+
+    {related.length > 0 && (
+      <section class="section">
+        <div class="section-head">
+          <div class="section-head-top">
+            <span class="sec-label">顺手</span>
+            <h2 class="sec-title">同一家或同一类型的还有</h2>
+          </div>
+        </div>
+        <div class="catalog">
+          {related.map((e) => <EggRow egg={e} today={today} />)}
+        </div>
+      </section>
+    )}
+
+    <section class="section">
+      <div class="notice">
+        <span class="ico">🔄</span>
+        <p>
+          这条信息最后核验于 <strong>{egg.verifiedAt ? fmtDate(egg.verifiedAt) : "尚未核验"}</strong>
+          {egg.verifiedAt ? "（" + relDay(egg.verifiedAt, today) + "）" : ""}。
+          厂商改规则不会通知我们，所以如果你发现对不上，请<a href={reportUrl} rel="noopener">提一句</a>。
+        </p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

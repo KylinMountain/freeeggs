@@ -1,0 +1,51 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { DIGESTS } from "../data/digests";
+import { EGGS } from "../data/eggs";
+import { SITE, TODAY } from "../data/site";
+import { fmtDate, relDay } from "../lib/format";
+
+const items = DIGESTS.map((d) => ({
+  ...d,
+  added: EGGS.filter((e) => e.addedAt === d.date),
+}));
+---
+
+<BaseLayout title="蛋报" description="领鸡蛋每日简报：今天新上了哪些额度、复核了什么、有哪些规则变了。" active="daily">
+  <section class="wrap page-head">
+    <h1 class="page-title">蛋报</h1>
+    <p class="page-lede">
+      每天记一笔：今天新上了什么、复核了什么、哪些规则悄悄变了。改了什么就写什么，没核验的绝不说成核验过。
+    </p>
+  </section>
+
+  <div class="wrap">
+    <div class="digest">
+      {items.map((d) => (
+        <article class="digest-item" id={d.date}>
+          <span class="date">{fmtDate(d.date)} · {relDay(d.date, TODAY)}</span>
+          <h3>{d.title}</h3>
+          <ul>{d.items.map((it) => <li>{it}</li>)}</ul>
+          {d.added.length > 0 && (
+            <p style="margin:18px 0 0;font-size:.86rem">
+              <span class="muted">当天上架：</span>
+              {d.added.map((e, i) => (
+                <span>{i > 0 ? " · " : ""}<a href={"/eggs/" + e.id}>{e.title}</a></span>
+              ))}
+            </p>
+          )}
+        </article>
+      ))}
+    </div>
+
+    <section style="padding-top:clamp(32px, 5vw, 56px)">
+      <div class="notice">
+        <span class="ico">📮</span>
+        <p>
+          想每天收到？订阅 <a href="/rss.xml">RSS</a>，或者直接 star 仓库。
+          也欢迎<a href="/submit">投稿</a>，写进明天的蛋报。
+        </p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

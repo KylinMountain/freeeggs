@@ -1,0 +1,131 @@
+---
+import "../styles/egg.css";
+import { SITE } from "../data/site";
+
+interface Props {
+  title?: string;
+  description?: string;
+  active?: "home" | "eggs" | "providers" | "daily" | "about" | "submit";
+}
+
+const { title, description = SITE.description, active } = Astro.props;
+const fullTitle = title ? title + " · " + SITE.name : SITE.name + " · " + SITE.tagline;
+const canonical = new URL(Astro.url.pathname, Astro.site ?? "https://freeeggs.pages.dev").href;
+
+const NAV = [
+  { href: "/eggs", label: "全部鸡蛋", key: "eggs" },
+  { href: "/providers", label: "按平台找", key: "providers" },
+  { href: "/daily", label: "蛋报", key: "daily" },
+  { href: "/about", label: "关于", key: "about" },
+] as const;
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE.name,
+  alternateName: SITE.latin,
+  description: SITE.description,
+  inLanguage: "zh-CN",
+  url: canonical,
+};
+---
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta name="theme-color" content="#FFFFFF" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.name + " 蛋报"} href="/rss.xml" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <script is:inline>document.documentElement.classList.add("js");</script>
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <header class="site-header" data-header>
+      <div class="wrap header-inner">
+        <a class="brand" href="/" aria-label={SITE.name + " 首页"}>
+          <svg class="brand-mark" width="24" height="24" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <path d="M16 3c6.2 0 11 9.2 11 16.2A11 11 0 0 1 5 19.2C5 12.2 9.8 3 16 3z" fill="var(--paper)" stroke="var(--ink)" stroke-width="1.8"></path>
+            <circle cx="16" cy="17.4" r="4.6" fill="var(--accent)"></circle>
+          </svg>
+          <span class="brand-name">{SITE.name}</span>
+          <span class="brand-latin">FREE&nbsp;EGGS</span>
+        </a>
+        <nav class="nav" aria-label="主导航">
+          {NAV.map((n) => (
+            <a href={n.href} aria-current={active === n.key ? "page" : undefined}>{n.label}</a>
+          ))}
+        </nav>
+        <a class="nav-cta" href="/submit">报一颗蛋</a>
+      </div>
+    </header>
+
+    <main>
+      <slot />
+    </main>
+
+    <footer class="site-footer">
+      <div class="wrap footer-grid">
+        <div>
+          <div class="footer-brand">{SITE.name} · {SITE.latin}</div>
+          <p style="margin:0;font-size:.88rem">{SITE.tagline}。<br />数据以官网为准，每条约标最后核验日期。</p>
+        </div>
+        <div>
+          <h4>逛一逛</h4>
+          <ul>
+            {NAV.map((n) => <li><a href={n.href}>{n.label}</a></li>)}
+            <li><a href="/eggs.json">开放数据 JSON</a></li>
+            <li><a href="/rss.xml">RSS 订阅</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>一起补蛋</h4>
+          <ul>
+            <li><a href="/submit">投稿一颗新蛋</a></li>
+            <li><a href={SITE.issueNew} rel="noopener">报告失效 / 纠错</a></li>
+            <li><a href="/about">核验规范</a></li>
+          </ul>
+        </div>
+        <p class="footer-legal">
+          <strong>免责声明：</strong>本站是社区整理的免费额度情报，不隶属于任何模型厂商，也不从领取行为中获利。
+          所有额度、价格与活动规则均可能随时变动，请以官方页面为准；标「待核验」的条目尤其需要你自行确认。
+          请遵守各平台的服务条款，不要用多账号等方式刷取额度。
+          <br />内容以 {SITE.license} 协议共享。
+        </p>
+      </div>
+    </footer>
+
+    <script is:inline>
+      (function () {
+        var header = document.querySelector("[data-header]");
+        function onScroll() {
+          if (!header) return;
+          if (window.scrollY > 8) header.classList.add("is-scrolled");
+          else header.classList.remove("is-scrolled");
+        }
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        var nodes = document.querySelectorAll("[data-reveal]");
+        if (!("IntersectionObserver" in window)) {
+          for (var i = 0; i < nodes.length; i++) nodes[i].classList.add("is-in");
+          return;
+        }
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { e.target.classList.add("is-in"); io.unobserve(e.target); }
+          });
+        }, { rootMargin: "0px 0px -6% 0px", threshold: 0.05 });
+        for (var j = 0; j < nodes.length; j++) io.observe(nodes[j]);
+      })();
+    </script>
+  </body>
+</html>

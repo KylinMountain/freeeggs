@@ -1,0 +1,44 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EggRow from "../../components/EggRow.astro";
+import { PROVIDERS } from "../../data/providers";
+import { EGGS } from "../../data/eggs";
+import { REGIONS, TODAY } from "../../data/site";
+import type { Provider } from "../../data/types";
+
+export function getStaticPaths() {
+  return PROVIDERS.map((provider) => ({ params: { id: provider.id }, props: { provider } }));
+}
+
+interface Props { provider: Provider }
+const { provider } = Astro.props;
+
+const eggs = EGGS
+  .filter((e) => e.providerId === provider.id)
+  .sort((a, b) => (a.status === "expired" ? 1 : 0) - (b.status === "expired" ? 1 : 0) || b.addedAt.localeCompare(a.addedAt));
+const today = TODAY;
+const live = eggs.filter((e) => e.status !== "expired").length;
+---
+
+<BaseLayout title={provider.name} description={provider.blurb + " 在 " + provider.name + " 可以领到的免费额度。"} active="providers">
+  <section class="wrap page-head">
+    <p class="breadcrumb"><a href="/">领鸡蛋</a> / <a href="/providers">按平台找</a> / <span>{provider.name}</span></p>
+    <h1 class="page-title">{provider.name}</h1>
+    <p class="page-lede">{provider.blurb}</p>
+    <div class="row-tags" style="margin-top:20px">
+      <span class="tag">{REGIONS[provider.region].label}</span>
+      <span class="tag">{live} 条可领</span>
+      <a class="tag" href={provider.homepage} target="_blank" rel="noopener noreferrer">官网 ↗</a>
+    </div>
+  </section>
+
+  <div class="wrap">
+    {eggs.length > 0 ? (
+      <div class="catalog">
+        {eggs.map((e) => <EggRow egg={e} today={today} />)}
+      </div>
+    ) : (
+      <p class="muted">这家目前没有收录条目。</p>
+    )}
+  </div>
+</BaseLayout>

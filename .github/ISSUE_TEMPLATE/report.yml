@@ -1,0 +1,85 @@
+name: 报告一颗蛋
+description: 投稿新发现的免费额度，或报告某条已失效 / 有错误
+title: "[蛋] "
+labels: ["submission"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢补蛋！填得越细，核验越快。
+        如果只是想快速投稿，也可以直接用站上的[投稿表单](https://freeeggs.pages.dev/submit)。
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 这是哪一类
+      options:
+        - 发现了一颗新蛋
+        - 某条已经失效了
+        - 某条的信息有错（金额 / 门槛 / 链接）
+    validations:
+      required: true
+
+  - type: input
+    id: title
+    attributes:
+      label: 活动 / 额度名称
+      placeholder: 例：DeepSeek 桌面端下载礼
+    validations:
+      required: true
+
+  - type: input
+    id: link
+    attributes:
+      label: 官方链接
+      description: 要能直接点开的官方地址，不要第三方转载页
+      placeholder: https://...
+    validations:
+      required: true
+
+  - type: input
+    id: value
+    attributes:
+      label: 面值
+      placeholder: 例：每个模型 100 万 tokens / ¥6 等值 Token
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: 领取步骤
+      description: 从打开哪个页面开始写，一行一步
+      placeholder: |
+        注册并完成实名
+        开通百炼服务
+        在模型广场逐个领取免费额度
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: 坑与注意事项
+      description: 要不要绑卡？是不是只有新用户？额度有没有有效期？哪里容易踩坑？
+    validations:
+      required: true
+
+  - type: dropdown
+    id: result
+    attributes:
+      label: 你实际领到了吗
+      options:
+        - 已实际领取到账
+        - 看到活动但没领
+        - 不确定
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: 截图或补充说明
+      description: 打码手机号、订单号等敏感信息
+    validations:
+      required: false

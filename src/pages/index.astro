@@ -1,0 +1,172 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import EggFeature from "../components/EggFeature.astro";
+import { EGGS, EGGS_UPDATED_AT } from "../data/eggs";
+import { DIGESTS } from "../data/digests";
+import { SITE, CATEGORIES, DIFFICULTY, STATUS_META, TODAY } from "../data/site";
+import { dayDiff, fmtDate, relDay } from "../lib/format";
+
+const today = TODAY;
+const featured = EGGS.filter((e) => e.featured);
+const lead = featured[0];
+const rest = featured.slice(1);
+
+const newCount = EGGS.filter((e) => dayDiff(e.addedAt, today) <= 3).length;
+const liveCount = EGGS.filter((e) => e.status === "fresh" || e.status === "ending").length;
+const pendingCount = EGGS.filter((e) => e.status === "unverified").length;
+
+const latest = DIGESTS[0];
+const leadStatus = lead ? STATUS_META[lead.status] : null;
+---
+
+<BaseLayout active="home">
+  <section class="wrap masthead">
+    <div class="masthead-kicker">Free Eggs · 每日更新</div>
+    <h1 class="masthead-title">领<em>鸡</em>蛋</h1>
+    <p class="masthead-tagline">{SITE.tagline}</p>
+    <p class="masthead-lede">{SITE.intro}</p>
+
+    <div class="stat-strip">
+      <div class="stat">
+        <span class="stat-num">{EGGS.length}</span>
+        <span class="stat-label">颗蛋在架</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num accent">{newCount}</span>
+        <span class="stat-label">近 3 天上新</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">{liveCount}</span>
+        <span class="stat-label">核验有效中</span>
+      </div>
+      <div class="stat">
+        <span class="stat-num">{EGGS_UPDATED_AT ? fmtDate(EGGS_UPDATED_AT, true) : "—"}</span>
+        <span class="stat-label">最后核验</span>
+      </div>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="notice">
+      <span class="ico">🥚</span>
+      <p>
+        <strong>先把丑话说在前面：</strong>本站条目由社区整理，每条都标注了<strong>最后核验日期</strong>与来源可信度。
+        额度、价格、活动规则随时会变，领取前请以官方页面为准；标「待核验」的条目尤其需要你自己确认。
+        我们宁可显示「不知道」，也不假装核实过。
+      </p>
+    </div>
+  </div>
+
+  {lead && (
+    <section class="wrap section">
+      <div class="section-head">
+        <div class="section-head-top">
+          <span class="sec-label">01 / 今日精选</span>
+          <h2 class="sec-title">这几颗最值得先领</h2>
+          <a class="sec-link" href="/eggs">全部 {EGGS.length} 颗 →</a>
+        </div>
+        <p class="sec-desc">面值高、门槛低、最近核验过的。左边这颗是今天的头条。</p>
+      </div>
+
+      <div class="lead">
+        <div>
+          <div class="lead-label">
+            {leadStatus && <span class={"badge badge--" + leadStatus.tone}>{leadStatus.label}</span>}
+            <span class="eyebrow">头条 · {CATEGORIES[lead.category].label}</span>
+          </div>
+          <div class="lead-value">{lead.valueText}</div>
+          <h3 class="lead-title"><a href={"/eggs/" + lead.id}>{lead.title}</a></h3>
+          <p class="lead-summary">{lead.summary}</p>
+          <div class="row-tags">
+            {lead.requires.map((r) => <span class="tag">{r}</span>)}
+            <span class="tag">门槛 {DIFFICULTY[lead.difficulty].label}</span>
+          </div>
+          <div class="lead-foot">
+            <a class="btn btn--primary" href={"/eggs/" + lead.id}>看完整领取步骤</a>
+            <span class="muted" style="font-size:.8rem">
+              核验 {lead.verifiedAt ? relDay(lead.verifiedAt, today) : "未核验"}
+            </span>
+          </div>
+        </div>
+
+        <div>
+          <div class="eyebrow" style="margin-bottom:6px">领取步骤</div>
+          <ol class="lead-steps">
+            {lead.steps.map((s, i) => (
+              <li><b>{String(i + 1).padStart(2, "0")}</b><span>{s}</span></li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      {rest.length > 0 && (
+        <div class="feature-grid" style="margin-top:1px">
+          {rest.map((egg) => <EggFeature egg={egg} today={today} />)}
+        </div>
+      )}
+
+      <div class="section-more">
+        <span class="count">
+          目录里一共 <strong>{EGGS.length}</strong> 条，含 <strong>{pendingCount}</strong> 条还没核验过的线索。
+        </span>
+        <a class="btn btn--primary" href="/eggs">去看全部 {EGGS.length} 颗蛋 →</a>
+      </div>
+    </section>
+  )}
+
+  <section class="wrap section">
+    <div class="section-head">
+      <div class="section-head-top">
+        <span class="sec-label">02 / 领蛋三步</span>
+        <h2 class="sec-title">不管在哪家领，流程都差不多</h2>
+      </div>
+    </div>
+    <div class="step-grid">
+      <div class="step">
+        <div class="step-num">STEP 01</div>
+        <h3>挑一颗蛋</h3>
+        <p>看面值，也看门槛。国内平台基本都要手机号加实名；海外的多半要外币卡和网络环境。先挑「有效」且核验日期新的。</p>
+      </div>
+      <div class="step">
+        <div class="step-num">STEP 02</div>
+        <h3>备好料再动手</h3>
+        <p>身份证、手机号，有时还要一张卡。海外平台绑卡大多不会真扣钱，但自己盯紧用量，别不小心升成付费账户。</p>
+      </div>
+      <div class="step">
+        <div class="step-num">STEP 03</div>
+        <h3>领到手，记得建 Key</h3>
+        <p>额度到账只是第一步。去控制台建一个 API Key，写进环境变量，跑通一次请求，这颗蛋才算真领到了。</p>
+      </div>
+    </div>
+    <p class="muted" style="font-size:.86rem;margin-top:18px">
+      还有一条铁律：<strong>免费额度几乎都有有效期</strong>。领了不用，等于没领。
+    </p>
+  </section>
+
+  <section class="band-dark" id="digest">
+    <div class="wrap digest-lead">
+      <div class="section-head" style="margin-bottom:0">
+        <div class="section-head-top">
+          <span class="sec-label">03 / 蛋报</span>
+          <h2 class="sec-title">每天记一笔</h2>
+          <a class="sec-link" href="/daily">全部蛋报 →</a>
+        </div>
+      </div>
+
+      <div style="margin-top:36px">
+        <span class="digest-date">{fmtDate(latest.date)} · {relDay(latest.date, today)}</span>
+        <h3 class="digest-title">{latest.title}</h3>
+        <ul class="digest-list">
+          {latest.items.map((it) => <li>{it}</li>)}
+        </ul>
+      </div>
+
+      <div class="form-actions" style="margin-top:40px">
+        <a class="btn btn--accent" href="/submit">报一颗新蛋</a>
+        <a class="btn btn--ghost" href="/daily" style="border-color:var(--dark-hairline);color:var(--dark-ink)">
+          看全部蛋报
+        </a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

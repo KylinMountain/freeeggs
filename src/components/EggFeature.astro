@@ -1,0 +1,21 @@
+---
+import type { Egg } from "../data/types";
+import { CATEGORIES, DIFFICULTY } from "../data/site";
+import { providerById } from "../data/providers";
+import { relDay } from "../lib/format";
+
+interface Props { egg: Egg; today: Date }
+const { egg, today } = Astro.props;
+const provider = providerById(egg.providerId);
+---
+<article class="feature">
+  <span class="feature-value">{egg.valueText}</span>
+  <h3 class="feature-title"><a href={"/eggs/" + egg.id}>{egg.title}</a></h3>
+  <p class="feature-sum">{egg.summary}</p>
+  <div class="row-tags">
+    <span class="tag">{provider ? provider.name : egg.providerId}</span>
+    <span class="tag">{CATEGORIES[egg.category].label}</span>
+    <span class="tag">门槛 {DIFFICULTY[egg.difficulty].label}</span>
+  </div>
+  <span class="feature-meta">核验 {egg.verifiedAt ? relDay(egg.verifiedAt, today) : "未核验"}</span>
+</article>

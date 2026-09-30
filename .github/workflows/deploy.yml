@@ -1,0 +1,94 @@
+name: 部署到阿里云
+
+# 合并 PR / 直接推送到 main，就会自动构建并同步到服务器。
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 连续推送时只保留最新一次部署，避免两次 rsync 打架
+concurrency:
+  group: deploy-production
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: 安装依赖
+        run: pnpm install --frozen-lockfile --store-dir "$HOME/.pnpm-store"
+
+      # build 里已经串了 check：字段写错、id 重复都会在这里拦下，坏数据不会上线
+      - name: 数据体检 + 构建
+        run: pnpm run build
+
+      - name: 检查是否配好了部署 Secrets
+        id: guard
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          if [ -z "$SSH_HOST" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice title=跳过部署::还没配置 SSH_HOST 等 Secrets，见 deploy/SETUP.md"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: 准备 SSH
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+        run: |
+          set -euo pipefail
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${SSH_PORT:-22}" -H "$SSH_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: rsync 到服务器
+        if: steps.guard.outputs.skip == 'false'
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          DEPLOY_PATH: ${{ secrets.DEPLOY_PATH }}
+        run: |
+          set -euo pipefail
+          # 防呆：--delete 很危险，绝不允许多余的空值或根目录
+          if [ -z "${DEPLOY_PATH:-}" ] || [ "${DEPLOY_PATH}" = "/" ]; then
+            echo "::error::DEPLOY_PATH 未设置或指向根目录，拒绝执行 rsync --delete"
+            exit 1
+          fi
+          if [ -z "${SSH_USER:-}" ] || [ -z "${SSH_HOST:-}" ]; then
+            echo "::error::SSH_USER / SSH_HOST 未设置"
+            exit 1
+          fi
+          rsync -az --delete --human-readable \
+            -e "ssh -p ${SSH_PORT:-22} -i ~/.ssh/deploy_key -o IdentitiesOnly=yes" \
+            dist/ "${SSH_USER}@${SSH_HOST}:${DEPLOY_PATH}/"
+
+      - name: 验证线上
+        if: steps.guard.outputs.skip == 'false'
+        run: |
+          sleep 3
+          code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 15 https://freeeggs.xiruistar.cn/ || echo 000)
+          echo "https://freeeggs.xiruistar.cn/ -> $code"
+          if [ "$code" != "200" ]; then
+            echo "::warning::线上返回 $code —— 检查 DNS 是否已指向服务器、证书是否签好、DEPLOY_PATH 是否正确"
+          fi

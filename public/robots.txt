@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://freeeggs.xiruistar.cn/sitemap.xml

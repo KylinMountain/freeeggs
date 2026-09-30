@@ -1,0 +1,153 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import EggRow from "../../components/EggRow.astro";
+import { EGGS, EGGS_UPDATED_AT } from "../../data/eggs";
+import { CATEGORIES, REGIONS, DIFFICULTY, TODAY } from "../../data/site";
+import { fmtDate } from "../../lib/format";
+
+const today = TODAY;
+const liveCount = EGGS.filter((e) => e.status === "fresh" || e.status === "ending").length;
+const pendingCount = EGGS.filter((e) => e.status === "unverified").length;
+
+const catCounts: Record<string, number> = {};
+for (const e of EGGS) catCounts[e.category] = (catCounts[e.category] ?? 0) + 1;
+
+const ordered = [...EGGS].sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+const catKeys = Object.keys(CATEGORIES) as (keyof typeof CATEGORIES)[];
+---
+
+<BaseLayout
+  title="全部鸡蛋"
+  description="领鸡蛋全量目录：按类型、地区、门槛筛选，或直接搜索平台与模型名。每条都标注了最后核验日期与来源可信度。"
+  active="eggs"
+>
+  <section class="wrap page-head">
+    <h1 class="page-title">全部鸡蛋</h1>
+    <p class="page-lede">
+      共 {EGGS.length} 条，按条件筛一筛。其中 {liveCount} 条核验有效，{pendingCount} 条还只是待核验的线索。
+      {EGGS_UPDATED_AT && <span>数据最后核验于 {fmtDate(EGGS_UPDATED_AT)}。</span>}
+    </p>
+  </section>
+
+  <div class="wrap">
+    <div class="filters">
+      <div class="filters-row">
+        <label class="search-box">
+          <span class="sr-only">搜索鸡蛋</span>
+          <input type="search" placeholder="搜平台、模型名或关键词，比如「豆包」「免费层」「学生」" data-q />
+        </label>
+        <select data-region aria-label="地区">
+          <option value="all">不限地区</option>
+          {Object.entries(REGIONS).map(([k, v]) => <option value={k}>{v.label}</option>)}
+        </select>
+        <select data-diff aria-label="门槛">
+          <option value="all">不限门槛</option>
+          {Object.entries(DIFFICULTY).map(([k, v]) => <option value={k}>{v.label} · {v.hint}</option>)}
+        </select>
+        <select data-sort aria-label="排序">
+          <option value="new">最新上架</option>
+          <option value="value">折算面值从高到低</option>
+          <option value="expires">最快截止优先</option>
+          <option value="diff">门槛从低到高</option>
+        </select>
+      </div>
+      <div class="filters-row">
+        <div class="chips" role="group" aria-label="类型筛选">
+          <button type="button" class="chip" data-chip="all" aria-pressed="true">全部 <span class="n">{EGGS.length}</span></button>
+          {catKeys.map((k) => (
+            <button type="button" class="chip" data-chip={k} aria-pressed="false">
+              {CATEGORIES[k].label} <span class="n">{catCounts[k] ?? 0}</span>
+            </button>
+          ))}
+        </div>
+        <label class="muted" style="font-size:.84rem;display:flex;align-items:center;gap:7px;margin-left:auto;cursor:pointer">
+          <input type="checkbox" data-hide-expired /> 只看已核验
+        </label>
+      </div>
+    </div>
+
+    <p class="result-count" data-count>显示 {EGGS.length} / {EGGS.length} 颗</p>
+
+    <div class="catalog" data-catalog>
+      {ordered.map((egg) => <EggRow egg={egg} today={today} />)}
+    </div>
+
+    <div class="empty-state" data-empty style="display:none">
+      <span class="big">🧺</span>
+      <p>没有符合条件的鸡蛋。</p>
+      <p class="muted" style="font-size:.88rem">换个关键词试试，或者去 <a href="/submit">报一颗新蛋</a>。</p>
+    </div>
+
+    <section style="padding-top:clamp(40px,6vw,72px)">
+      <div class="notice">
+        <span class="ico">🧭</span>
+        <p>
+          找不到你用的平台？可以<a href="/providers">按平台找</a>，
+          或者<a href="/submit">直接报给我们</a>。看到活动但还没领，也欢迎投 —— 我们会标成「待核验」，不会假装核实过。
+        </p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
+
+<script>
+  const catalog = document.querySelector("[data-catalog]");
+  const cards = catalog ? Array.from(catalog.querySelectorAll("[data-egg]")) : [];
+  const qEl = document.querySelector("[data-q]");
+  const regionEl = document.querySelector("[data-region]");
+  const diffEl = document.querySelector("[data-diff]");
+  const sortEl = document.querySelector("[data-sort]");
+  const hideEl = document.querySelector("[data-hide-expired]");
+  const countEl = document.querySelector("[data-count]");
+  const emptyEl = document.querySelector("[data-empty]");
+  const chips = Array.from(document.querySelectorAll("[data-chip]"));
+
+  const total = cards.length;
+  const state = { q: "", cat: "all", region: "all", diff: "all", sort: "new", hide: false };
+
+  function compare(a, b) {
+    const A = a.dataset;
+    const B = b.dataset;
+    if (state.sort === "value") return parseFloat(B.value) - parseFloat(A.value);
+    if (state.sort === "diff") return parseFloat(A.diff) - parseFloat(B.diff);
+    if (state.sort === "expires") return A.expires.localeCompare(B.expires);
+    return B.added.localeCompare(A.added);
+  }
+
+  function apply() {
+    const visible = [];
+    for (const card of cards) {
+      const d = card.dataset;
+      let ok = true;
+      if (state.q && d.search.indexOf(state.q) === -1) ok = false;
+      if (ok && state.cat !== "all" && d.cat !== state.cat) ok = false;
+      if (ok && state.region !== "all" && d.region !== state.region && d.region !== "both") ok = false;
+      if (ok && state.diff !== "all" && d.diff !== state.diff) ok = false;
+      if (ok && state.hide && (d.status === "expired" || d.status === "unverified")) ok = false;
+      card.style.display = ok ? "" : "none";
+      if (ok) visible.push(card);
+    }
+
+    visible.sort(compare);
+    for (const card of visible) catalog.appendChild(card);
+
+    countEl.textContent = "显示 " + visible.length + " / " + total + " 颗";
+    if (emptyEl) emptyEl.style.display = visible.length === 0 ? "" : "none";
+  }
+
+  if (qEl) qEl.addEventListener("input", function () { state.q = qEl.value.trim().toLowerCase(); apply(); });
+  if (regionEl) regionEl.addEventListener("change", function () { state.region = regionEl.value; apply(); });
+  if (diffEl) diffEl.addEventListener("change", function () { state.diff = diffEl.value; apply(); });
+  if (sortEl) sortEl.addEventListener("change", function () { state.sort = sortEl.value; apply(); });
+  if (hideEl) hideEl.addEventListener("change", function () { state.hide = hideEl.checked; apply(); });
+
+  chips.forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      state.cat = chip.dataset.chip;
+      chips.forEach(function (o) { o.setAttribute("aria-pressed", String(o === chip)); });
+      apply();
+    });
+  });
+
+  apply();
+</script>

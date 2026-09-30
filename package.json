@@ -1,0 +1,22 @@
+{
+  "name": "freeeggs",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "node scripts/check.mjs && astro build",
+    "preview": "astro preview",
+    "check": "node scripts/check.mjs",
+    "stale": "node scripts/stale.mjs",
+    "reverify": "node scripts/stale.mjs"
+  },
+  "dependencies": {
+    "astro": "^7.3.5"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "esbuild"
+    ]
+  }
+}

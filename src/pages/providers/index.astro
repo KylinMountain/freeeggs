@@ -1,0 +1,58 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import { PROVIDERS } from "../../data/providers";
+import { EGGS } from "../../data/eggs";
+import { REGIONS } from "../../data/site";
+
+const groups = (Object.keys(REGIONS) as (keyof typeof REGIONS)[])
+  .map((region) => ({
+    region,
+    meta: REGIONS[region],
+    providers: PROVIDERS.filter((p) => p.region === region).map((p) => ({
+      ...p,
+      count: EGGS.filter((e) => e.providerId === p.id && e.status !== "expired").length,
+    })),
+  }))
+  .filter((g) => g.providers.length > 0);
+---
+
+<BaseLayout title="按平台找" description="按大模型平台浏览可领取的免费额度，先看你已经在用哪家。" active="providers">
+  <section class="wrap page-head">
+    <h1 class="page-title">按平台找</h1>
+    <p class="page-lede">已经在用哪家的模型，就先去那家把新人额度领了。按地区分好，省得白折腾。</p>
+  </section>
+
+  <div class="wrap">
+    {groups.map((g) => (
+      <section style="padding-top:clamp(32px, 5vw, 56px)">
+        <div class="section-head" style="margin-bottom:20px">
+          <div class="section-head-top">
+            <span class="sec-label">{g.meta.label}</span>
+            <h2 class="sec-title" style="font-size:1.25rem">{g.meta.hint}</h2>
+          </div>
+        </div>
+        <table class="data">
+          <thead>
+            <tr><th>平台</th><th>简介</th><th style="text-align:right">可领</th></tr>
+          </thead>
+          <tbody>
+            {g.providers.map((p) => (
+              <tr>
+                <td style="font-weight:700;white-space:nowrap"><a href={"/providers/" + p.id}>{p.name}</a></td>
+                <td class="muted">{p.blurb}</td>
+                <td class="mono" style="text-align:right">{p.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+    ))}
+
+    <section style="padding-top:clamp(32px, 5vw, 56px)">
+      <div class="notice">
+        <span class="ico">➕</span>
+        <p>没找到你用的平台？<a href="/submit">告诉我们</a>，我们去看一眼有没有新人额度。</p>
+      </div>
+    </section>
+  </div>
+</BaseLayout>
